@@ -8,6 +8,8 @@ import { ValidationModule } from '@interloid/validation';
 import { ObservabilityModule } from '@interloid/observability';
 import { SecurityModule } from '@interloid/security';
 import { appConfigSchema } from './config/env.schema';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 
 const env = appConfigSchema.parse(process.env);
 const isProd = env.NODE_ENV === 'production';
@@ -94,6 +96,7 @@ const isProd = env.NODE_ENV === 'production';
     SecurityModule.forRoot({
       ...(env.CSRF_ENABLED && {
         csrf: {
+          
           ignoreMethods: ['GET'], // Read-only REST queries bypass verification tokens since they change no state
           headerName: 'X-CSRF-Token', // Dictates the request header label name clients need to attach tokens on
           sameSite: env.CSRF_SAME_SITE, // Mitigates cross-site attack vulnerabilities on browser-to-server cookies
@@ -114,6 +117,8 @@ const isProd = env.NODE_ENV === 'production';
         ],
       }, // Enforces high-protection request caps to shield API domains from brute-force scripts
     }),
+    PrismaModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
