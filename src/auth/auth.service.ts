@@ -83,11 +83,9 @@ export class AuthService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash, ...publicUser } = user;
 
-    const csrfToken = this.csrfService.generateToken();
     return {
       user: publicUser,
       accessToken: await this.jwtService.signAsync(payload),
-      csrfToken,
     };
   }
 

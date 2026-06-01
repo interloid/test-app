@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '@interloid/validation';
@@ -20,8 +21,8 @@ import {
   updateProfileSchema,
   UpdateProfileDto,
 } from './auth.dto';
-import { ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { Response } from 'express';
+import { ApiHeader, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import type { Response, Request } from 'express';
 import { JwtAuthGuard } from './auth.guard';
 import { CurrentUser, Public } from '@interloid/core';
 import { SkipCsrf } from '@interloid/security';
@@ -71,12 +72,6 @@ export class AuthController {
       sameSite: 'lax', // 🛡️ Standard mitigation setting preventing strict third-party site injections
       maxAge: 24 * 60 * 60 * 1000, // Matches your 1-day JWT expiration duration
     });
-    response.cookie('X-CSRF-Token', result.csrfToken, {
-      httpOnly: true, // 🔒 Protects against XSS scripts reading your authentication tokens
-      secure: process.env.NODE_ENV === 'production', // true in prod (requires HTTPS)
-      sameSite: 'lax', // 🛡️ Standard mitigation setting preventing strict third-party site injections
-      maxAge: 24 * 60 * 60 * 1000, // Matches your 1-day JWT expiration duration
-    });
 
     // Return the user object context cleanly back to the client interface without leaking the token raw
     return { user: result.user };
@@ -85,6 +80,12 @@ export class AuthController {
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
+  @ApiHeader({
+    name: 'x-csrf-token',
+    description: 'Cryptographic anti-CSRF token retrieved from the /auth/csrf endpoint',
+    required: true, // Makes it a mandatory field in Swagger UI
+    schema: { type: 'string' },
+  })
   @ApiOperation({ summary: 'Update authenticated user profile name attribute' })
   @ApiResponse({
     status: 200,
