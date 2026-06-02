@@ -6,10 +6,8 @@ import {
   HttpStatus,
   UsePipes,
   Res,
-  Param,
   Patch,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '@interloid/validation';
@@ -22,7 +20,7 @@ import {
   UpdateProfileDto,
 } from './auth.dto';
 import { ApiHeader, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { Response, Request } from 'express';
+import type { Response } from 'express';
 import { JwtAuthGuard } from './auth.guard';
 import { CurrentUser, Public } from '@interloid/core';
 import { SkipCsrf } from '@interloid/security';
@@ -38,6 +36,7 @@ export class AuthController {
    */
   @Post('register')
   @Public()
+  @SkipCsrf()
   @HttpCode(HttpStatus.CREATED)
   @UsePipes(new ZodValidationPipe(registerSchema))
   @ApiOperation({ summary: 'Register a new user profile record' })
@@ -82,7 +81,6 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiHeader({
     name: 'x-csrf-token',
-    description: 'Cryptographic anti-CSRF token retrieved from the /auth/csrf endpoint',
     required: true, // Makes it a mandatory field in Swagger UI
     schema: { type: 'string' },
   })

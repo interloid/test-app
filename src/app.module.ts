@@ -10,8 +10,10 @@ import { SecurityModule } from '@interloid/security';
 import { appConfigSchema } from './config/env.schema';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { JwtAuthGuard } from './auth/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { env } from './main';
 
-const env = appConfigSchema.parse(process.env);
 const isProd = env.NODE_ENV === 'production';
 @Module({
   imports: [
@@ -96,9 +98,8 @@ const isProd = env.NODE_ENV === 'production';
     SecurityModule.forRoot({
       ...(env.CSRF_ENABLED && {
         csrf: {
-          
           ignoreMethods: ['GET'], // Read-only REST queries bypass verification tokens since they change no state
-          headerName: 'X-CSRF-Token', // Dictates the request header label name clients need to attach tokens on
+          headerName: 'x-csrf-token', // Dictates the request header label name clients need to attach tokens on
           sameSite: env.CSRF_SAME_SITE, // Mitigates cross-site attack vulnerabilities on browser-to-server cookies
           cookieName: 'csrf-token', // Defines the key label identifier used to track the security cookie payload
           secure: isProd, // Enforces security cookies to exclusively travel on active, encrypted HTTPS connections
@@ -121,6 +122,12 @@ const isProd = env.NODE_ENV === 'production';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}

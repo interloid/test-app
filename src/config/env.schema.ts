@@ -150,6 +150,9 @@ export const appConfigSchema = z.object({
 
   OTEL_EXPORTER_OTLP_ENDPOINT: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
+
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  DATABASE_URL: z.url('DATABASE_URL must be a valid URL'),
 });
 
 /**

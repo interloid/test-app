@@ -14,7 +14,7 @@ import { bootstrapSentry, bootstrapTracing } from '@interloid/observability';
 import { LoggerService } from '@interloid/logger';
 
 // Parse env once at the boundary.
-const env = appConfigSchema.parse(process.env);
+export const env = appConfigSchema.parse(process.env);
 
 // ---- EARLY OBSERVABILITY ----
 // Must run BEFORE NestFactory.create() so instrumentation catches the

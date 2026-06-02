@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { env } from '../main';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -23,14 +24,11 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       // Cryptographically verify the token against your JWT secret key
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET || 'fallback_secret_key_change_in_prod',
-      });
+      const payload = await this.jwtService.verifyAsync(token);
 
       // Attach the token data payload to the request context
       // Your payload contains: { sub: userId, email: string, name: string }
       request['user'] = payload;
-      
     } catch {
       throw new UnauthorizedException(
         'Invalid or expired authentication session',

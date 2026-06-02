@@ -7,15 +7,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterDto, LoginDto, UpdateProfileDto } from './auth.dto';
 import * as argon2 from 'argon2';
-import { CsrfService } from '@interloid/security';
 
 @Injectable()
 export class AuthService {
-  // Inject both Prisma and the new JwtService
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-    private readonly csrfService: CsrfService,
   ) {}
 
   /**
