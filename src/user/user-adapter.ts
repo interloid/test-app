@@ -10,13 +10,14 @@ export class UserAdapter implements AuthUserPort {
     passwordHash: string;
     profile: { name: string };
   }): Promise<AuthUser> {
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: input.email,
         passwordHash: input.passwordHash,
         name: (input.profile?.name as string | undefined) ?? '',
       },
     });
+    return user;
   }
   findByEmail(email: string): Promise<AuthUser | null> {
     const user = this.prisma.user.findUnique({

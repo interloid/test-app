@@ -64,10 +64,10 @@ export class AuthUserController {
   @UsePipes(new ZodValidationPipe(loginSchema))
   @ApiOperation({ summary: 'Authenticate and set secure HttpOnly cookie' })
   async login(
+    @Body() dto: LoginDto,
     @Req() req: Request,
     @Res({ passthrough: true }) response: Response, // Injects underlying express response context
   ) {
-    const dto = req.body as LoginDto;
     const ip = req.ip;
     const userAgent = req.headers['user-agent'];
     const result: LoginResult = await this.authService.login(

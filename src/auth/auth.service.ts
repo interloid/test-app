@@ -86,7 +86,7 @@ export class AuthUserService {
     };
   }
 
-  async updateName(userId: string, dto: UpdateProfileDto) {    
+  async updateName(userId: string, dto: UpdateProfileDto) {
     // Execute atomic update query matching the Prisma 7 bracket typing syntax
     const updatedUser = await this.prisma['user']['update']({
       where: { id: userId },
