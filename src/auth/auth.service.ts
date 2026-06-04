@@ -9,7 +9,7 @@ import { RegisterDto, LoginDto, UpdateProfileDto } from './auth.dto';
 import * as argon2 from 'argon2';
 
 @Injectable()
-export class AuthService {
+export class AuthUserService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -86,7 +86,7 @@ export class AuthService {
     };
   }
 
-  async updateName(userId: string, dto: UpdateProfileDto) {
+  async updateName(userId: string, dto: UpdateProfileDto) {    
     // Execute atomic update query matching the Prisma 7 bracket typing syntax
     const updatedUser = await this.prisma['user']['update']({
       where: { id: userId },

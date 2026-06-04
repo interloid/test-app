@@ -19,7 +19,7 @@ export default tseslint.config(
       },
       sourceType: 'module',
       parserOptions: {
-        project: ['./tsconfig.json'],
+        // project: ['./tsconfig.json'],
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },

@@ -7,9 +7,8 @@ import {
   UsePipes,
   Res,
   Patch,
-  UseGuards,
+  Req,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { ZodValidationPipe } from '@interloid/validation';
 import {
   loginSchema,
@@ -20,14 +19,18 @@ import {
   UpdateProfileDto,
 } from './auth.dto';
 import { ApiHeader, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import type { Response } from 'express';
-import { JwtAuthGuard } from './auth.guard';
+import type { Request, Response } from 'express';
 import { CurrentUser, Public } from '@interloid/core';
 import { SkipCsrf } from '@interloid/security';
+import { AuthService, LoginResult } from '@interloid/auth';
+import { AuthUserService } from './auth.service';
 
 @Controller('auth')
-export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+export class AuthUserController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly authUserService: AuthUserService,
+  ) {}
 
   /**
    * POST /auth/register
@@ -49,7 +52,9 @@ export class AuthController {
     description: 'Payload validation constraints failed.',
   })
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+    return this.authService.register(dto.email, dto.password, {
+      name: dto.name,
+    });
   }
 
   @Post('login')
@@ -59,25 +64,36 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(loginSchema))
   @ApiOperation({ summary: 'Authenticate and set secure HttpOnly cookie' })
   async login(
-    @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) response: Response, // Injects underlying express response context
   ) {
-    const result = await this.authService.login(dto);
+    const dto = req.body as LoginDto;
+    const ip = req.ip;
+    const userAgent = req.headers['user-agent'];
+    const result: LoginResult = await this.authService.login(
+      dto.email,
+      dto.password,
+      {
+        ip,
+        userAgent,
+      },
+    );
+    console.log(result);
 
+    return true;
     // Bake the JWT token directly into a secure, HttpOnly browser cookie container
-    response.cookie('access_token', result.accessToken, {
-      httpOnly: true, // 🔒 Protects against XSS scripts reading your authentication tokens
-      secure: process.env.NODE_ENV === 'production', // true in prod (requires HTTPS)
-      sameSite: 'lax', // 🛡️ Standard mitigation setting preventing strict third-party site injections
-      maxAge: 24 * 60 * 60 * 1000, // Matches your 1-day JWT expiration duration
-    });
+    // response.cookie('access_token', result.accessToken, {
+    //   httpOnly: true, // 🔒 Protects against XSS scripts reading your authentication tokens
+    //   secure: process.env.NODE_ENV === 'production', // true in prod (requires HTTPS)
+    //   sameSite: 'lax', // 🛡️ Standard mitigation setting preventing strict third-party site injections
+    //   maxAge: 24 * 60 * 60 * 1000, // Matches your 1-day JWT expiration duration
+    // });
 
-    // Return the user object context cleanly back to the client interface without leaking the token raw
-    return { user: result.user };
+    // // Return the user object context cleanly back to the client interface without leaking the token raw
+    // return { user: result.user };
   }
 
   @Patch('profile')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   @ApiHeader({
     name: 'x-csrf-token',
@@ -95,10 +111,11 @@ export class AuthController {
     description: 'User account reference not found.',
   })
   async updateName(
-    @CurrentUser('sub') userId: string,
+    @CurrentUser('userId')
+    userId: string,
     // Extract destination target UUID from request URI parameters
     @Body(new ZodValidationPipe(updateProfileSchema)) dto: UpdateProfileDto,
   ) {
-    return this.authService.updateName(userId, dto);
+    return this.authUserService.updateName(userId, dto);
   }
 }

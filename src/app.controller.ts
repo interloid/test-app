@@ -3,6 +3,7 @@ import { AppService } from './app.service';
 import { SkipCsrf, StrictThrottle } from '@interloid/security';
 import { Public } from '@interloid/core';
 
+@Public()
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -14,7 +15,6 @@ export class AppController {
   }
 
   // Mark a route as publicly accessible (no auth required):
-  @Public()
   @Get('profile')
   getProfile() {
     return { data: { user: 'guest' } };
@@ -25,12 +25,5 @@ export class AppController {
   @Post('webhook')
   handleWebhook() {
     return { data: { received: true } };
-  }
-
-  // Apply stricter rate limits to one route:
-  @StrictThrottle() // override the global bucket to 5/min
-  @Post('login')
-  login() {
-    return { data: { logged_in: true } };
   }
 }

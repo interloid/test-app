@@ -9,11 +9,12 @@ import { ObservabilityModule } from '@interloid/observability';
 import { SecurityModule } from '@interloid/security';
 import { appConfigSchema } from './config/env.schema';
 import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { env } from './main';
+import { JwtAuthGuard } from '@interloid/auth';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AuthUserModule } from './auth/auth.module';
 
+export const env = appConfigSchema.parse(process.env);
 const isProd = env.NODE_ENV === 'production';
 @Module({
   imports: [
@@ -119,7 +120,9 @@ const isProd = env.NODE_ENV === 'production';
       }, // Enforces high-protection request caps to shield API domains from brute-force scripts
     }),
     PrismaModule,
-    AuthModule,
+
+    EventEmitterModule.forRoot(),
+    AuthUserModule,
   ],
   controllers: [AppController],
   providers: [

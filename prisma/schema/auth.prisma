@@ -1,0 +1,70 @@
+// Merged into the host app's schema. Auth owns sessions/tokens; the User
+// model is owned by the host (or @interloid/users). Auth only adds the
+// auth-relevant columns via the fragment doc — see README.
+
+model RefreshSession {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash     String   @unique          // store hash, never the token
+  family        String                    // rotation family for reuse detection
+  userAgent     String?
+  ip            String?
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([family])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model MfaSecret {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  secret        String                       // encrypt at rest (see §10)
+  confirmedAt   DateTime?
+  recoveryCodes String[] @db.Text[]                     // store hashes
+  createdAt     DateTime @default(now())
+}
+
+model OAuthAccount {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider     String                          // 'google' | 'microsoft'
+  providerId   String
+  createdAt    DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@index([userId])
+}
